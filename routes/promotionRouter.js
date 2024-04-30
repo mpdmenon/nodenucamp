@@ -1,8 +1,29 @@
 const express = require("express");
 const Promotion = require("../models/promotion");
 const authenticate = require("../authenticate");
+const verifyAdmin = require("../verifyAdmin");
 
 const promotionRouter = express.Router();
+
+// Error handler middleware
+const errorHandler = (err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500);
+  res.json({ error: err.message });
+};
+
+promotionRouter.use(express.json());
+
+// Middleware to check if the user is an admin
+const isAdmin = (req, res, next) => {
+  if (req.user && req.user.admin) {
+    return next();
+  } else {
+    const err = new Error("You are not authorized to perform this operation!");
+    err.status = 403;
+    return next(err);
+  }
+};
 
 promotionRouter
   .route("/")
@@ -13,9 +34,9 @@ promotionRouter
         res.setHeader("Content-Type", "application/json");
         res.json(promotions);
       })
-      .catch((err) => next(err));
+      .catch(next);
   })
-  .post(authenticate.verifyUser, (req, res, next) => {
+  .post(authenticate.verifyUser, isAdmin, (req, res, next) => {
     Promotion.create(req.body)
       .then((promotion) => {
         console.log("Promotion Created ", promotion);
@@ -23,20 +44,16 @@ promotionRouter
         res.setHeader("Content-Type", "application/json");
         res.json(promotion);
       })
-      .catch((err) => next(err));
+      .catch(next);
   })
-  .put(authenticate.verifyUser, (req, res) => {
-    res.statusCode = 403;
-    res.end("PUT operation not supported on /promotions");
-  })
-  .delete(authenticate.verifyUser, (req, res, next) => {
+  .delete(authenticate.verifyUser, isAdmin, (req, res, next) => {
     Promotion.deleteMany()
       .then((response) => {
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
         res.json(response);
       })
-      .catch((err) => next(err));
+      .catch(next);
   });
 
 promotionRouter
@@ -48,15 +65,9 @@ promotionRouter
         res.setHeader("Content-Type", "application/json");
         res.json(promotion);
       })
-      .catch((err) => next(err));
+      .catch(next);
   })
-  .post(authenticate.verifyUser, (req, res) => {
-    res.statusCode = 403;
-    res.end(
-      `POST operation not supported on /promotions/${req.params.promotionId}`
-    );
-  })
-  .put(authenticate.verifyUser, (req, res, next) => {
+  .put(authenticate.verifyUser, isAdmin, (req, res, next) => {
     Promotion.findByIdAndUpdate(
       req.params.promotionId,
       {
@@ -69,16 +80,16 @@ promotionRouter
         res.setHeader("Content-Type", "application/json");
         res.json(promotion);
       })
-      .catch((err) => next(err));
+      .catch(next);
   })
-  .delete(authenticate.verifyUser, (req, res, next) => {
+  .delete(authenticate.verifyUser, isAdmin, (req, res, next) => {
     Promotion.findByIdAndDelete(req.params.promotionId)
       .then((response) => {
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
         res.json(response);
       })
-      .catch((err) => next(err));
+      .catch(next);
   });
 
 module.exports = promotionRouter;

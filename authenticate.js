@@ -4,6 +4,7 @@ const User = require("./models/user");
 const JwtStrategy = require("passport-jwt").Strategy;
 const ExtractJwt = require("passport-jwt").ExtractJwt;
 const jwt = require("jsonwebtoken"); // used to create, sign, and verify tokens
+const createError = require("http-errors"); // Import necessary modules
 
 const config = require("./config.js");
 
@@ -35,3 +36,9 @@ exports.jwtPassport = passport.use(
 );
 
 exports.verifyUser = passport.authenticate("jwt", { session: false });
+
+// Import the verifyAdmin middleware function
+const verifyAdmin = require("./verifyAdmin");
+
+// Export verifyAdmin middleware
+exports.verifyAdmin = verifyAdmin;
