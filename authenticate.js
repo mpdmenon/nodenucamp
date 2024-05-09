@@ -1,3 +1,4 @@
+// This is for GIT Test on MAy 4, 2024
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const User = require("./models/user");
